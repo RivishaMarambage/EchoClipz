@@ -150,6 +150,9 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
       const inputName = `clip_${clip.id}.mp4`;
       const outputName = `edited_${clip.id}_${Date.now()}.mp4`;
       
+      // Load the input video into the FFmpeg virtual file system
+      await ffmpeg.writeFile(inputName, await fetchFile(clip.url));
+      
       let fontFilter = '';
       if (textOverlay.trim() !== '') {
         try {
