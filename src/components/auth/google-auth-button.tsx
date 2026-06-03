@@ -9,7 +9,8 @@ import { toast } from "sonner"
 export function GoogleAuthButton({ isSignUp = false }: { isSignUp?: boolean }) {
   const [loading, setLoading] = useState(false)
 
-  const handleGoogleAuth = async () => {
+  const handleGoogleAuth = async (e: React.MouseEvent) => {
+    e.preventDefault()
     try {
       setLoading(true)
       const supabase = createClient()

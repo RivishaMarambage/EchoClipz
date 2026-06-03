@@ -48,14 +48,8 @@ export function Navbar() {
   }, [isOpen]);
 
   const logoElement = (
-    <a href="#" className="flex items-center gap-2.5 group">
-      <div className="relative w-5 h-5 flex items-center justify-center">
-        <span className="absolute w-1.5 h-1.5 rounded-full bg-[#39FF14] top-0 left-1/2 transform -translate-x-1/2 opacity-90 transition-all duration-300 group-hover:scale-125 shadow-[0_0_8px_#39FF14]"></span>
-        <span className="absolute w-1.5 h-1.5 rounded-full bg-[#39FF14] left-0 top-1/2 transform -translate-y-1/2 opacity-90 transition-all duration-300 group-hover:scale-125 shadow-[0_0_8px_#39FF14]"></span>
-        <span className="absolute w-1.5 h-1.5 rounded-full bg-[#39FF14] right-0 top-1/2 transform -translate-y-1/2 opacity-90 transition-all duration-300 group-hover:scale-125 shadow-[0_0_8px_#39FF14]"></span>
-        <span className="absolute w-1.5 h-1.5 rounded-full bg-[#39FF14] bottom-0 left-1/2 transform -translate-x-1/2 opacity-90 transition-all duration-300 group-hover:scale-125 shadow-[0_0_8px_#39FF14]"></span>
-      </div>
-      <span className="font-bold text-base tracking-tight text-white transition-colors group-hover:text-zinc-200">ClipFlow AI</span>
+    <a href="/" className="flex items-center group">
+      <img src="/ClipFlow%20logo.png" alt="ClipFlow" className="h-14 object-contain drop-shadow-[0_0_12px_rgba(57,255,20,0.3)] transition-transform duration-300 group-hover:scale-105" />
     </a>
   );
 
@@ -90,7 +84,7 @@ export function Navbar() {
   );
 
   return (
-    <header className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50
+    <header className={`fixed top-12 left-1/2 transform -translate-x-1/2 z-50
                        flex flex-col items-center
                        px-6 py-2.5 backdrop-blur-md
                        ${headerShapeClass}

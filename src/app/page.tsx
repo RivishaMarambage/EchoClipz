@@ -2,7 +2,7 @@
 
 import { motion, useScroll, useTransform, type Variants } from "framer-motion"
 import Link from "next/link"
-import { ArrowRight, Upload, Cpu, Download, Scissors, Zap, Type, BarChart3, Play, Check, Rocket, Globe, Video, Share2 } from "lucide-react"
+import { ArrowRight, Upload, Cpu, Download, Scissors, Zap, Type, BarChart3, Play, Check, Rocket, Globe, Video, Share2, Lightbulb } from "lucide-react"
 import { useRef } from "react"
 import LiquidEther from "@/components/ui/LiquidEther"
 import BlurText from "@/components/ui/BlurText"
@@ -11,7 +11,7 @@ import { Navbar } from "@/components/ui/Navbar"
 import { PricingWrapper, Heading, Price, Paragraph } from "@/components/ui/PricingCards"
 import { TestimonialsColumn, testimonials } from "@/components/ui/Testimonials"
 import { InteractiveRobotSpline } from "@/components/ui/InteractiveRobotSpline"
-
+import { Footer } from "@/components/layout/Footer"
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 40 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
@@ -57,11 +57,18 @@ export default function LandingPage() {
         />
       </div>
 
+      {/* Top Banner */}
+      <div className="fixed top-0 left-0 w-full bg-[#39FF14] text-neutral-950 text-center py-2 text-[9px] sm:text-[10px] font-extrabold z-50 tracking-widest uppercase shadow-[0_2px_10px_rgba(57,255,20,0.15)] flex items-center justify-center gap-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-neutral-950 animate-pulse" />
+        Early Access Launch: Try all Pro features 100% free! No credit card required.
+        <span className="w-1.5 h-1.5 rounded-full bg-neutral-950 animate-pulse" />
+      </div>
+
       {/* NAVBAR */}
       <Navbar />
 
       {/* HERO */}
-      <div ref={heroRef} className="relative pt-24 pb-32 px-6 overflow-hidden min-h-[90vh] flex items-center">
+      <div ref={heroRef} className="relative pt-40 pb-32 px-6 overflow-hidden min-h-[90vh] flex items-center">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(57,255,20,0.07),transparent_60%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(0,200,150,0.05),transparent_60%)]" />
 
@@ -86,7 +93,7 @@ export default function LandingPage() {
             </motion.h1>
 
             <BlurText
-              text="AI-powered creator operating system for TikTok, Reels, and YouTube Shorts editors. Precision Flow to scale your content engine."
+              text="AI-powered creator operating system integrated with Llama 3.3 70B. Generate viral ideas, crop clips dynamically, and draft optimized captions instantly."
               delay={30}
               animateBy="words"
               direction="bottom"
@@ -105,16 +112,32 @@ export default function LandingPage() {
                 <Play className="w-4 h-4" /> Watch Demo
               </button>
             </motion.div>
+            <motion.p variants={fadeUp} initial="hidden" animate="visible" transition={{ delay: 0.35 }}
+              className="text-[10px] text-[#39FF14] mt-3 font-semibold tracking-wider uppercase flex items-center gap-2"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-[#39FF14] animate-ping" />
+              100% Free Trial for Launch Beta. No credit card required.
+            </motion.p>
 
             <motion.div variants={fadeUp} initial="hidden" animate="visible" transition={{ delay: 0.4 }}
-              className="flex items-center gap-2 mt-8 text-xs text-zinc-500"
+              className="flex items-center gap-3 mt-8 text-xs text-zinc-400"
             >
               <div className="flex -space-x-2">
-                {["bg-indigo-500","bg-pink-500","bg-yellow-500","bg-cyan-500"].map((c,i)=>(
-                  <div key={i} className={`w-6 h-6 rounded-full ${c} border-2 border-black`} />
+                {[
+                  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80",
+                  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&h=100&q=80",
+                  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&h=100&q=80",
+                  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&h=100&q=80"
+                ].map((src, i) => (
+                  <img
+                    key={i}
+                    src={src}
+                    alt={`Creator ${i}`}
+                    className="w-6 h-6 rounded-full border border-black object-cover shadow-sm"
+                  />
                 ))}
               </div>
-              <span><strong className="text-white">8,150+</strong> Creators Found Their Viral Clips</span>
+              <span><strong className="text-[#39FF14] drop-shadow-[0_0_8px_rgba(57,255,20,0.4)]">72+</strong> creators found their viral clips</span>
             </motion.div>
           </motion.div>
 
@@ -154,20 +177,24 @@ export default function LandingPage() {
               <Step>
                 <div className="flex flex-col items-center text-center p-4">
                   <div className="w-12 h-12 rounded-full bg-[#39FF14]/10 border border-[#39FF14]/20 flex items-center justify-center mb-4">
-                    <Upload className="w-6 h-6 text-[#39FF14]" />
+                    <Lightbulb className="w-6 h-6 text-[#39FF14]" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">1. Upload Session</h3>
-                  <p className="text-sm text-zinc-400 mb-6 max-w-sm">Drop your stream, vlog, or raw gaming footage directly into our cloud engine.</p>
+                  <h3 className="text-xl font-bold text-white mb-2">1. AI Ideation Engine</h3>
+                  <p className="text-sm text-zinc-400 mb-6 max-w-sm">Generate viral hooks and structured video ideas using Llama 3.3 70B tailored to your niche and tone.</p>
                   
-                  {/* Simulated Upload Zone */}
-                  <div className="w-full border border-dashed border-[#39FF14]/30 rounded-xl bg-black/40 p-6 flex flex-col items-center">
-                    <Upload className="w-8 h-8 text-[#39FF14] mb-3 animate-pulse" />
-                    <p className="text-xs text-zinc-400 font-medium mb-1">gaming_session_4h.mp4</p>
-                    <p className="text-[10px] text-zinc-600 mb-3">4.2 GB</p>
-                    <div className="w-full bg-zinc-900 rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-[#39FF14] h-full rounded-full w-full shadow-[0_0_8px_rgba(57,255,20,0.6)]" />
+                  {/* Simulated Ideation Panel */}
+                  <div className="w-full border border-[#39FF14]/30 rounded-xl bg-black/40 p-5 text-left space-y-3">
+                    <div className="flex justify-between items-center text-xs border-b border-white/10 pb-2">
+                      <span className="text-zinc-400 font-bold">Llama 3.3 Idea Generator</span>
+                      <span className="text-[#39FF14] text-[10px] font-mono uppercase">Llama Active</span>
                     </div>
-                    <span className="text-[10px] text-[#39FF14] font-bold mt-2">100% UPLOADED</span>
+                    <div className="space-y-2">
+                      <div className="text-[10px] text-zinc-400"><strong className="text-zinc-300">Niche:</strong> Tech/Coding &nbsp;|&nbsp; <strong className="text-zinc-300">Tone:</strong> Hacker</div>
+                      <div className="p-3 bg-zinc-950/80 border border-white/5 rounded-lg">
+                        <p className="text-xs text-[#39FF14] font-bold mb-1">Hook Concept:</p>
+                        <p className="text-xs text-white italic">"This secret AI tool for developers feels illegal to know..."</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </Step>
@@ -175,16 +202,16 @@ export default function LandingPage() {
               <Step>
                 <div className="flex flex-col items-center text-center p-4">
                   <div className="w-12 h-12 rounded-full bg-[#39FF14]/10 border border-[#39FF14]/20 flex items-center justify-center mb-4">
-                    <Cpu className="w-6 h-6 text-[#39FF14]" />
+                    <Scissors className="w-6 h-6 text-[#39FF14]" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">2. Precision Processing</h3>
-                  <p className="text-sm text-zinc-400 mb-6 max-w-sm">Our AI engine scans dialogue, laughter, and high-motion frames to crop precise 9:16 verticals.</p>
+                  <h3 className="text-xl font-bold text-white mb-2">2. Timeline Editor</h3>
+                  <p className="text-sm text-zinc-400 mb-6 max-w-sm">Upload your video, split clips precisely on the timeline, adjust to 9:16 aspect ratios, and place text overlays.</p>
                   
                   {/* Simulated Processing Panel */}
                   <div className="w-full border border-white/5 rounded-xl bg-[#111] p-5 text-left space-y-3">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="text-zinc-500 font-mono">Analyzing Timeline...</span>
-                      <span className="text-[#39FF14] font-bold animate-pulse">Processing</span>
+                      <span className="text-zinc-500 font-mono">Splitting Timeline...</span>
+                      <span className="text-[#39FF14] font-bold animate-pulse">Rendering</span>
                     </div>
                     <div className="w-full bg-zinc-900 rounded-full h-1.5 overflow-hidden">
                       <motion.div 
@@ -196,11 +223,11 @@ export default function LandingPage() {
                     <div className="space-y-1.5 pt-1">
                       <div className="flex items-center gap-2 text-[10px] text-zinc-400">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#39FF14]" />
-                        <span>4 Viral Hook Moments Detected (Confidence: 96%)</span>
+                        <span>Timeline split created at 0:15 and 0:45</span>
                       </div>
                       <div className="flex items-center gap-2 text-[10px] text-zinc-400">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#39FF14]" />
-                        <span>Auto-Framing face tracking applied (98% accuracy)</span>
+                        <span>Vertical video format (9:16 Aspect Ratio) applied</span>
                       </div>
                     </div>
                   </div>
@@ -210,34 +237,33 @@ export default function LandingPage() {
               <Step>
                 <div className="flex flex-col items-center text-center p-4">
                   <div className="w-12 h-12 rounded-full bg-[#39FF14]/10 border border-[#39FF14]/20 flex items-center justify-center mb-4">
-                    <Download className="w-6 h-6 text-[#39FF14]" />
+                    <Type className="w-6 h-6 text-[#39FF14]" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">3. Scale Distribution</h3>
-                  <p className="text-sm text-zinc-400 mb-6 max-w-sm">Export instantly in ultra-smooth 4K with auto-generated kinetic captions and post directly to socials.</p>
+                  <h3 className="text-xl font-bold text-white mb-2">3. Copywriter & Distribution</h3>
+                  <p className="text-sm text-zinc-400 mb-6 max-w-sm">Draft optimized captions and hashtags tailored specifically for platform algorithms, then export in 4K.</p>
                   
                   {/* Simulated Export/Publish Panel */}
                   <div className="w-full border border-white/5 rounded-xl bg-[#111] p-5 text-left space-y-4">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="text-white font-bold">Publish Destination</span>
-                      <span className="text-[#39FF14] text-[10px] font-bold">READY TO EXPORT</span>
+                      <span className="text-white font-bold">Copy & Hashtags</span>
+                      <span className="text-[#39FF14] text-[10px] font-bold">ACTIVE</span>
+                    </div>
+                    <div className="p-2.5 bg-black/60 border border-[#39FF14]/30 rounded-lg text-[11px] text-zinc-300 leading-normal">
+                      🚀 This coding trick changes EVERYTHING! Stop wasting hours on manual edits... #developer #webdev #codinglife
                     </div>
                     <div className="flex justify-between gap-2">
-                      <div className="flex-1 bg-black/60 border border-[#39FF14]/30 rounded-lg p-2 flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#39FF14]" />
-                        <span className="text-[10px] font-bold text-zinc-300">TikTok</span>
+                      <div className="flex-1 bg-black/60 border border-[#39FF14]/20 rounded-lg p-2 flex items-center gap-1.5">
+                        <div className="w-1 h-1 rounded-full bg-[#39FF14]" />
+                        <span className="text-[9px] font-bold text-zinc-400">TikTok</span>
                       </div>
-                      <div className="flex-1 bg-black/60 border border-[#39FF14]/30 rounded-lg p-2 flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#39FF14]" />
-                        <span className="text-[10px] font-bold text-zinc-300">YT Shorts</span>
+                      <div className="flex-1 bg-black/60 border border-[#39FF14]/20 rounded-lg p-2 flex items-center gap-1.5">
+                        <div className="w-1 h-1 rounded-full bg-[#39FF14]" />
+                        <span className="text-[9px] font-bold text-zinc-400">Shorts</span>
                       </div>
-                      <div className="flex-1 bg-black/60 border border-[#39FF14]/30 rounded-lg p-2 flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#39FF14]" />
-                        <span className="text-[10px] font-bold text-zinc-300">IG Reels</span>
+                      <div className="flex-1 bg-black/60 border border-[#39FF14]/20 rounded-lg p-2 flex items-center gap-1.5">
+                        <div className="w-1 h-1 rounded-full bg-[#39FF14]" />
+                        <span className="text-[9px] font-bold text-zinc-400">Reels</span>
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between pt-1 border-t border-white/5 text-[10px] text-zinc-500">
-                      <span>File Resolution: 4K (60fps)</span>
-                      <span>Est. Reach: +135% Growth</span>
                     </div>
                   </div>
                 </div>
@@ -265,9 +291,9 @@ export default function LandingPage() {
             {/* Top 3 cards - Changed to motion.div to pass stagger variants */}
             <motion.div className="grid md:grid-cols-3 gap-6">
               {[
-                { icon: Scissors, color: "#39FF14", title: "AI Clip Finder", desc: "Analyzes dozens of formats to identify high-value moments as they emerge in your clips." },
-                { icon: Zap, color: "#39FF14", title: "Viral Hook Gen", desc: "Auto-generates fast hooks optimized for scroll-stopping." },
-                { icon: Type, color: "#39FF14", title: "Auto-Captions", desc: "Kinetic transcription is tuned to speech with 99% accuracy." },
+                { icon: Lightbulb, color: "#39FF14", title: "AI Idea Generator", desc: "Never run out of content ideas. Let Llama 3.3 70B generate scroll-stopping hooks and script templates for your exact niche." },
+                { icon: Scissors, color: "#39FF14", title: "Browser Studio", desc: "Split your clips, track timeline intervals, and crop videos to vertical aspect ratios directly in your browser." },
+                { icon: Type, color: "#39FF14", title: "AI Copywriter", desc: "Draft high-converting captions and viral hashtags optimized for TikTok, Reels, and Shorts search algorithms." },
               ].map(({ icon: Icon, color, title, desc }, i) => (
                 <motion.div key={i} variants={fadeUp}
                   whileHover={{ scale: 1.03, borderColor: "rgba(57,255,20,0.4)" }}
@@ -323,7 +349,9 @@ export default function LandingPage() {
               direction="top"
               className="text-4xl md:text-5xl font-bold mb-4 justify-center text-white"
             />
-            <motion.p variants={fadeUp} className="text-zinc-400">Choose the plan that fits your creative needs.</motion.p>
+            <motion.p variants={fadeUp} className="text-zinc-400">
+              All plans are <span className="text-[#39FF14] font-semibold">100% free to try</span> during our launch beta. No credit card required!
+            </motion.p>
           </motion.div>
 
           <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}
@@ -334,12 +362,16 @@ export default function LandingPage() {
               <PricingWrapper
                 type="waves"
                 contactHref="/signup"
-                buttonText="Get Started"
+                buttonText="Start For Free"
                 className="bg-gradient-to-br from-zinc-900 via-neutral-900 to-black border-zinc-800"
                 strokeColorClass="text-zinc-800/40"
               >
                 <Heading>Creator</Heading>
-                <Price>$29<span className="text-sm font-normal text-zinc-500 ml-1">/mo</span></Price>
+                <Price>
+                  <span className="line-through text-zinc-600 text-2xl mr-2 font-normal font-sans">$29</span>
+                  $0
+                  <span className="text-[10px] text-[#39FF14] font-bold tracking-widest ml-2 bg-[#39FF14]/10 border border-[#39FF14]/20 px-2 py-0.5 rounded uppercase">Beta Free</span>
+                </Price>
                 <Paragraph>Perfect for solo video editors, streamers, and indie creators starting their journey.</Paragraph>
                 <ul className="space-y-2.5 mt-4">
                   {["10 Hours of Video Processing", "720p & 1080p Render Export", "Standard AI Captions"].map((f, i) => (
@@ -356,7 +388,7 @@ export default function LandingPage() {
               <PricingWrapper
                 type="crosses"
                 contactHref="/signup"
-                buttonText="Start Free Trial"
+                buttonText="Claim Pro Beta Access"
                 className="relative bg-gradient-to-br from-zinc-950 via-[#1b3d11]/15 to-black border-[#39FF14]/40 shadow-[0_0_40px_rgba(57,255,20,0.1)]"
                 strokeColorClass="text-[#39FF14]/15"
                 buttonClassName="bg-[#39FF14] hover:bg-[#2ee610] text-black font-extrabold shadow-[0_0_15px_rgba(57,255,20,0.3)]"
@@ -367,7 +399,11 @@ export default function LandingPage() {
                   </span>
                 </div>
                 <Heading>Pro</Heading>
-                <Price className="text-[#39FF14]">$79<span className="text-sm font-normal text-zinc-400 ml-1">/mo</span></Price>
+                <Price className="text-[#39FF14]">
+                  <span className="line-through text-zinc-500 text-2xl mr-2 font-normal font-sans">$79</span>
+                  $0
+                  <span className="text-[10px] text-black font-bold tracking-widest ml-2 bg-[#39FF14] px-2 py-0.5 rounded uppercase">Beta Free</span>
+                </Price>
                 <Paragraph className="text-zinc-300">Unlock full precision automation to build and run your multi-platform content engine.</Paragraph>
                 <ul className="space-y-2.5 mt-4">
                   {["50 Hours of Video Processing", "Full 4K Render Quality", "Premium Dynamic AI Styles", "A/B Test Dynamic Variants"].map((f, i) => (
@@ -384,13 +420,17 @@ export default function LandingPage() {
               <PricingWrapper
                 type="waves"
                 contactHref="/signup"
-                buttonText="Contact Sales"
+                buttonText="Try Agency Free"
                 className="bg-gradient-to-br from-zinc-900 via-[#1d1233]/15 to-black border-purple-500/20"
                 strokeColorClass="text-purple-500/10"
                 buttonClassName="bg-zinc-800 text-white border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-500"
               >
                 <Heading>Agency</Heading>
-                <Price>$199<span className="text-sm font-normal text-zinc-500 ml-1">/mo</span></Price>
+                <Price>
+                  <span className="line-through text-zinc-600 text-2xl mr-2 font-normal font-sans">$199</span>
+                  $0
+                  <span className="text-[10px] text-[#39FF14] font-bold tracking-widest ml-2 bg-[#39FF14]/10 border border-[#39FF14]/20 px-2 py-0.5 rounded uppercase">Beta Free</span>
+                </Price>
                 <Paragraph>Designed for production studios, channels, and marketing teams managing infinite streams.</Paragraph>
                 <ul className="space-y-2.5 mt-4">
                   {["Unlimited Video Processing", "High-Priority Server Queues", "Custom Templates & Integrations", "Developer API Access"].map((f, i) => (
@@ -446,46 +486,7 @@ export default function LandingPage() {
       </Section>
 
       {/* FOOTER */}
-      <footer className="border-t border-white/5 bg-black py-12 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-10 mb-12">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-6 h-6 rounded-md bg-[#39FF14] flex items-center justify-center">
-                  <Scissors className="w-3.5 h-3.5 text-black" />
-                </div>
-                <span className="font-bold">ClipFlow AI</span>
-              </div>
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                All your short-form video needs in one beautiful, fast workspace.
-              </p>
-              <p className="text-xs text-zinc-600 mt-4">© 2026 ClipFlow AI. All rights reserved.</p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-white text-sm mb-4">Product</h4>
-              <ul className="space-y-2 text-xs text-zinc-500">
-                {["Features","Pricing","Changelog","Roadmap"].map(l => <li key={l}><a href="#" className="hover:text-white transition-colors">{l}</a></li>)}
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-white text-sm mb-4">Resources</h4>
-              <ul className="space-y-2 text-xs text-zinc-500">
-                {["Privacy Policy","Help Center","Blog","Contact","API Docs"].map(l => <li key={l}><a href="#" className="hover:text-white transition-colors">{l}</a></li>)}
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-white text-sm mb-4">Connect</h4>
-              <div className="flex gap-3">
-                {[Globe, Video, Share2].map((Icon, i) => (
-                  <a key={i} href="#" className="w-8 h-8 rounded-md border border-white/10 flex items-center justify-center text-zinc-500 hover:text-[#39FF14] hover:border-[#39FF14]/40 transition-colors">
-                    <Icon className="w-3.5 h-3.5" />
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

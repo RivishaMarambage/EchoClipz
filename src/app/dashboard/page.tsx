@@ -24,8 +24,8 @@ export default function DashboardPage() {
               <Activity className="w-4 h-4 text-[#39FF14]" />
             </div>
           </div>
-          <div className="text-3xl font-bold text-white">2.4M</div>
-          <p className="text-xs text-[#39FF14] flex items-center"><TrendingUp className="w-3 h-3 mr-1" /> +14.5% from last month</p>
+          <div className="text-3xl font-bold text-white">3.1M</div>
+          <p className="text-xs text-[#39FF14] flex items-center"><TrendingUp className="w-3 h-3 mr-1" /> +22.4% from last month</p>
         </AnimatedCard>
 
         <AnimatedCard delay={0.2} className="flex flex-col gap-4">
@@ -46,8 +46,8 @@ export default function DashboardPage() {
               <Flame className="w-4 h-4 text-[#39FF14]" />
             </div>
           </div>
-          <div className="text-3xl font-bold text-white">4</div>
-          <p className="text-xs text-zinc-500">Currently trending on TikTok</p>
+          <div className="text-3xl font-bold text-white">7</div>
+          <p className="text-xs text-[#39FF14]">3 currently trending on TikTok</p>
         </AnimatedCard>
 
         <AnimatedCard delay={0.4} className="flex flex-col gap-4">
@@ -57,8 +57,8 @@ export default function DashboardPage() {
               <Video className="w-4 h-4 text-[#39FF14]" />
             </div>
           </div>
-          <div className="text-3xl font-bold text-white">12</div>
-          <p className="text-xs text-zinc-500">2 ready to publish today</p>
+          <div className="text-3xl font-bold text-white">18</div>
+          <p className="text-xs text-zinc-500">4 ready to publish today</p>
         </AnimatedCard>
       </div>
 
@@ -88,11 +88,11 @@ export default function DashboardPage() {
           </h3>
           <div className="space-y-4">
             {[
-              { text: "Educational gaming hooks are seeing a 22% spike in engagement this week.", tag: "Gaming" },
-              { text: "Videos between 25-30s have optimal retention in your niche.", tag: "Analytics" },
+              { text: "Assetto Corsa No-Hesi videos are seeing a 34% spike in engagement this week.", tag: "Gaming" },
+              { text: "Clips between 25-30s have optimal retention on TikTok.", tag: "Analytics" },
               { text: "Your audience is highly active between 6PM and 9PM EST.", tag: "Timing" },
             ].map((insight, i) => (
-              <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-[#39FF14]/5 transition-colors">
+              <div key={i} className="p-4 rounded-xl bg-zinc-950/50 border border-zinc-900 hover:border-[#39FF14]/30 transition-colors">
                 <span className="text-xs font-bold text-[#39FF14] uppercase tracking-wider mb-2 block">{insight.tag}</span>
                 <p className="text-sm text-zinc-300">{insight.text}</p>
               </div>

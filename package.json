@@ -10,6 +10,10 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
+    "@distube/ytdl-core": "^4.16.12",
+    "@ffmpeg/core": "^0.12.10",
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "@splinetool/react-spline": "^4.1.0",
     "@splinetool/runtime": "^1.12.95",
     "@supabase/ssr": "^0.10.3",
