@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { LayoutDashboard, Lightbulb, Scissors, Type, Calendar, BarChart, Settings, LogOut } from "lucide-react"
 import {
   Sidebar,
@@ -59,6 +60,7 @@ const items = [
 export function AppSidebar() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const pathname = usePathname()
 
   useEffect(() => {
     const supabase = createClient()
@@ -113,17 +115,25 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-2">
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    render={<Link href={item.url} />} 
-                    className="text-zinc-300 hover:text-[#39FF14] hover:bg-[#39FF14]/10 rounded-full transition-all duration-300 ease-out hover:translate-x-1 hover:shadow-[0_0_12px_rgba(57,255,20,0.1)] active:scale-95"
-                  >
-                    <item.icon className="w-5 h-5 mr-3" />
-                    <span className="font-medium">{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) => {
+                const isActive = item.url === '/dashboard' ? pathname === '/dashboard' : pathname?.startsWith(item.url);
+                
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      render={<Link href={item.url} />} 
+                      className={`rounded-full transition-all duration-300 ease-out hover:translate-x-1 active:scale-95 ${
+                        isActive 
+                          ? "text-[#39FF14] bg-[#39FF14]/10 shadow-[0_0_12px_rgba(57,255,20,0.1)]" 
+                          : "text-zinc-300 hover:text-[#39FF14] hover:bg-[#39FF14]/10 hover:shadow-[0_0_12px_rgba(57,255,20,0.1)]"
+                      }`}
+                    >
+                      <item.icon className="w-5 h-5 mr-3" />
+                      <span className="font-medium">{item.title}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
