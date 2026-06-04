@@ -18,7 +18,10 @@ export default function CaptionsPage() {
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
-  async function onSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    
     setLoading(true)
     setError(null)
     setCaptions(null)
@@ -65,7 +68,7 @@ export default function CaptionsPage() {
               <h3 className="text-xl font-bold text-white mb-1">Video Details</h3>
               <p className="text-sm text-zinc-400">Provide context for your video to generate the perfect caption.</p>
             </div>
-            <form action={onSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="topic" className="text-zinc-200">Clip Topic / Summary</Label>
                 <Input 

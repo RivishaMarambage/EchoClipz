@@ -17,7 +17,10 @@ export default function IdeasPage() {
   const [ideas, setIdeas] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  async function onSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    
     setLoading(true)
     setError(null)
     setIdeas(null)
@@ -56,7 +59,7 @@ export default function IdeasPage() {
               <p className="text-sm text-zinc-400">The more specific you are, the better the AI can tailor the ideas.</p>
             </div>
             
-            <form action={onSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="creatorType" className="text-zinc-200">Creator Type</Label>
                 <Input 
