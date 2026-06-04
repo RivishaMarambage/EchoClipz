@@ -102,14 +102,56 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
 
   const handleTimeUpdate = () => {
     if (videoRef.current) {
-      // Because we have segments, real time mapping is complex.
-      // For the preview, we just let the video play, but when rendering we cut it.
-      setPlayhead(videoRef.current.currentTime);
+      let currentTime = videoRef.current.currentTime;
+      
+      // Skip logic: if we are in a deleted area, jump to the next segment
+      if (segments.length > 0) {
+        const activeSegment = segments.find(s => currentTime >= s.start && currentTime <= s.end);
+        
+        if (!activeSegment) {
+          const sortedSegments = [...segments].sort((a, b) => a.start - b.start);
+          const nextSegment = sortedSegments.find(s => s.start > currentTime);
+          
+          if (nextSegment) {
+            videoRef.current.currentTime = nextSegment.start;
+            currentTime = nextSegment.start;
+            if (audioRef.current) audioRef.current.currentTime = nextSegment.start;
+          } else {
+            // Passed the last segment, so stop
+            videoRef.current.pause();
+            setIsPlaying(false);
+            const endOfLast = sortedSegments[sortedSegments.length - 1].end;
+            videoRef.current.currentTime = endOfLast;
+            currentTime = endOfLast;
+            if (audioRef.current) {
+              audioRef.current.pause();
+              audioRef.current.currentTime = endOfLast;
+            }
+          }
+        }
+      }
+      
+      setPlayhead(currentTime);
     }
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const time = parseFloat(e.target.value);
+    let time = parseFloat(e.target.value);
+    
+    // Snap out of deleted areas during seeking
+    if (segments.length > 0) {
+      const activeSegment = segments.find(s => time >= s.start && time <= s.end);
+      if (!activeSegment) {
+        const sortedSegments = [...segments].sort((a, b) => a.start - b.start);
+        const nextSegment = sortedSegments.find(s => s.start > time);
+        if (nextSegment) {
+          time = nextSegment.start;
+        } else {
+          time = sortedSegments[sortedSegments.length - 1].end;
+        }
+      }
+    }
+    
     setPlayhead(time);
     if (videoRef.current) {
       videoRef.current.currentTime = time;
