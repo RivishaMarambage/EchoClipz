@@ -177,18 +177,23 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
       const args = ['-i', inputName];
       let filterComplex = '';
       
-      // 1. Trim Segments
-      segments.forEach((seg, i) => {
-        filterComplex += `[0:v]trim=start=${seg.start}:end=${seg.end},setpts=PTS-STARTPTS[v${i}];`;
-        filterComplex += `[0:a]atrim=start=${seg.start}:end=${seg.end},asetpts=PTS-STARTPTS[a${i}];`;
-      });
-      
-      // 2. Concat Segments
-      let concatInputs = '';
-      segments.forEach((_, i) => {
-        concatInputs += `[v${i}][a${i}]`;
-      });
-      filterComplex += `${concatInputs}concat=n=${segments.length}:v=1:a=1[v_concat][a_out];`;
+      // 1 & 2. Trim and Concat Segments
+      if (segments.length === 1) {
+        const seg = segments[0];
+        filterComplex += `[0:v]trim=start=${seg.start}:end=${seg.end},setpts=PTS-STARTPTS[v_concat];`;
+        filterComplex += `[0:a]atrim=start=${seg.start}:end=${seg.end},asetpts=PTS-STARTPTS[a_out];`;
+      } else {
+        segments.forEach((seg, i) => {
+          filterComplex += `[0:v]trim=start=${seg.start}:end=${seg.end},setpts=PTS-STARTPTS[v${i}];`;
+          filterComplex += `[0:a]atrim=start=${seg.start}:end=${seg.end},asetpts=PTS-STARTPTS[a${i}];`;
+        });
+        
+        let concatInputs = '';
+        segments.forEach((_, i) => {
+          concatInputs += `[v${i}][a${i}]`;
+        });
+        filterComplex += `${concatInputs}concat=n=${segments.length}:v=1:a=1[v_concat][a_out];`;
+      }
       
       // 3. Chain Crop / Text on video
       let currentV = '[v_concat]';
