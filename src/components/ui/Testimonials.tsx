@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 export const testimonials = [
   {
-    text: "ClipFlow completely changed my workflow. I used to spend 4 hours cutting stream highlights; now AI finds them in seconds and auto-generates dynamic captions.",
+    text: "EchoClipz completely changed my workflow. I used to spend 4 hours cutting stream highlights; now AI finds them in seconds and auto-generates dynamic captions.",
     image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60",
     name: "Sarah Jenkins",
     role: "TikTok Editor (1.2M followers)"

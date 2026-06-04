@@ -254,7 +254,7 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
           <div className="w-px h-4 bg-zinc-800" />
           <h3 className="text-white font-bold font-mono tracking-tight flex items-center gap-2">
             <Scissors className="w-5 h-5 text-[#39FF14]" />
-            ClipFlow Advanced Editor
+            EchoClipz Advanced Editor
           </h3>
         </div>
         <div className="flex items-center gap-4">

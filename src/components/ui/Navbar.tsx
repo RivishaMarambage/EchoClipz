@@ -49,7 +49,7 @@ export function Navbar() {
 
   const logoElement = (
     <a href="/" className="flex items-center group">
-      <img src="/ClipFlow%20logo.png" alt="ClipFlow" className="h-14 object-contain drop-shadow-[0_0_12px_rgba(57,255,20,0.3)] transition-transform duration-300 group-hover:scale-105" />
+      <img src="/EchoClipz.png" alt="EchoClipz" className="h-14 object-contain drop-shadow-[0_0_12px_rgba(57,255,20,0.3)] transition-transform duration-300 group-hover:scale-105" />
     </a>
   );
 

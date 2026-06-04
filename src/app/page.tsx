@@ -79,7 +79,7 @@ export default function LandingPage() {
               className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-[#39FF14] mb-6"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-[#39FF14] animate-pulse" />
-              ClipFlow Engine v2.0 Live
+              EchoClipz Engine v2.0 Live
             </motion.div>
 
             <motion.h1 variants={fadeUp} initial="hidden" animate="visible" transition={{ delay: 0.1 }}
@@ -457,7 +457,7 @@ export default function LandingPage() {
               className="text-4xl md:text-5xl font-bold mb-4 justify-center text-white"
             />
             <motion.p variants={fadeUp} className="text-zinc-400">
-              Join thousands of video editors, agencies, and streamers who scale their content using ClipFlow.
+              Join thousands of video editors, agencies, and streamers who scale their content using EchoClipz.
             </motion.p>
           </div>
 

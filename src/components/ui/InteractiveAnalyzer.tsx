@@ -30,7 +30,7 @@ export default function InteractiveAnalyzer() {
           <div className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
           <div className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
           <div className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
-          <span className="ml-3 text-xs font-mono text-zinc-500">clipflow_analyzer.exe</span>
+          <span className="ml-3 text-xs font-mono text-zinc-500">echoclipz_analyzer.exe</span>
         </div>
         <div className="flex items-center gap-1.5 text-[10px] font-mono font-medium text-zinc-500">
           <span className={`w-1.5 h-1.5 rounded-full bg-[#39FF14] ${pulse ? 'opacity-100 scale-110 shadow-[0_0_8px_#39FF14]' : 'opacity-40'} transition-all duration-500`} />

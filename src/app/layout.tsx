@@ -3,10 +3,10 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner"
 
 export const metadata: Metadata = {
-  title: "ClipFlow AI – Turn Long Videos Into Viral Short Clips",
+  title: "EchoClipz – Turn Long Videos Into Viral Short Clips",
   description: "AI-powered creator operating system for TikTok, Reels, and YouTube Shorts editors.",
   icons: {
-    icon: "/ClipFlow%20logo.png",
+    icon: "/EchoClipz.png",
   },
 };
 

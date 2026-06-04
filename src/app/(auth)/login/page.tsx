@@ -225,7 +225,7 @@ export default function LoginPage(props: { searchParams: Promise<{ error?: strin
             width={1000}
             height={1000}
             priority
-            alt="ClipFlow Creator Hub"
+            alt="EchoClipz Creator Hub"
             className="w-full h-full object-cover opacity-20 filter grayscale hover:scale-105 transition-transform duration-700"
           />
         </div>

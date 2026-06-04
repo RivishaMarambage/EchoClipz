@@ -108,7 +108,7 @@ export default function SettingsPage() {
                   <label className="text-sm font-medium text-zinc-300">Email Address</label>
                   <input 
                     type="email" 
-                    defaultValue="creator@clipflow.ai"
+                    defaultValue="creator@echoclipz.ai"
                     disabled
                     className="w-full bg-black/20 border border-white/5 rounded-lg px-4 py-2.5 text-zinc-500 outline-none cursor-not-allowed"
                   />
@@ -142,7 +142,7 @@ export default function SettingsPage() {
                   <Sparkles className="w-5 h-5 text-[#39FF14]" />
                   AI Generation Engine
                 </h3>
-                <p className="text-sm text-zinc-400">Configure how ClipFlow's Llama 3.3 model generates your content.</p>
+                <p className="text-sm text-zinc-400">Configure how EchoClipz's Llama 3.3 model generates your content.</p>
               </div>
 
               <div className="space-y-6">

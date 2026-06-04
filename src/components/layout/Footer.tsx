@@ -29,7 +29,7 @@ export function Footer() {
 
         {/* Huge Logo Section */}
         <div className="flex items-center mb-10 overflow-hidden">
-          <img src="/ClipFlow%20logo.png" alt="ClipFlow Logo" className="h-20 md:h-28 lg:h-36 object-contain drop-shadow-[0_0_30px_rgba(57,255,20,0.3)]" />
+          <img src="/EchoClipz.png" alt="EchoClipz Logo" className="h-20 md:h-28 lg:h-36 object-contain drop-shadow-[0_0_30px_rgba(57,255,20,0.3)]" />
         </div>
 
         {/* Middle Section: Info & Newsletter */}
@@ -45,7 +45,7 @@ export function Footer() {
               <p>123 Creator Lane #404</p>
               <p>Los Angeles, CA 90028</p>
               <br />
-              <p className="hover:text-[#39FF14] transition-colors cursor-pointer">hello@clipflow.ai</p>
+              <p className="hover:text-[#39FF14] transition-colors cursor-pointer">hello@echoclipz.ai</p>
             </div>
           </div>
           <div className="md:col-span-4 space-y-4">
@@ -81,7 +81,7 @@ export function Footer() {
 
         {/* Bottom Section */}
         <div className="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-white/5 text-[10px] text-zinc-600">
-          <p>© ClipFlow. All Rights Reserved {new Date().getFullYear()}</p>
+          <p>© EchoClipz. All Rights Reserved {new Date().getFullYear()}</p>
           <p className="mt-4 sm:mt-0">Site by DEEPMIND</p>
         </div>
       </div>
