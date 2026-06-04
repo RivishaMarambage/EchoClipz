@@ -12,11 +12,30 @@ import { AnimatedCard } from "@/components/ui/animated-card"
 import { GlowingButton } from "@/components/ui/glowing-button"
 import { generateCaptions } from "./actions"
 
+const CopyOptionButton = ({ text }: { text: string }) => {
+  const [copied, setCopied] = useState(false)
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+  return (
+    <Button 
+      variant="outline" 
+      size="sm" 
+      onClick={handleCopy}
+      className="border-white/10 bg-white/5 text-white hover:bg-white/10 h-8 text-xs"
+    >
+      {copied ? <Check className="h-3 w-3 mr-1 text-green-400" /> : <Copy className="h-3 w-3 mr-1" />}
+      {copied ? "Copied" : "Copy"}
+    </Button>
+  )
+}
+
 export default function CaptionsPage() {
   const [loading, setLoading] = useState(false)
   const [captions, setCaptions] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -25,7 +44,6 @@ export default function CaptionsPage() {
     setLoading(true)
     setError(null)
     setCaptions(null)
-    setCopied(false)
     
     try {
       const result = await generateCaptions(formData)
@@ -38,14 +56,6 @@ export default function CaptionsPage() {
       setError("An unexpected error occurred.")
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleCopy = () => {
-    if (captions) {
-      navigator.clipboard.writeText(captions)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
     }
   }
 
@@ -131,17 +141,6 @@ export default function CaptionsPage() {
           <AnimatedCard delay={0.2} className="min-h-[500px] flex flex-col">
             <div className="flex flex-row items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white">Generated Captions</h3>
-              {captions && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleCopy}
-                  className="border-white/10 bg-white/5 text-white hover:bg-white/10"
-                >
-                  {copied ? <Check className="h-4 w-4 mr-2 text-green-400" /> : <Copy className="h-4 w-4 mr-2" />}
-                  {copied ? "Copied!" : "Copy All"}
-                </Button>
-              )}
             </div>
             
             <div className="flex-1">
@@ -154,16 +153,29 @@ export default function CaptionsPage() {
                   <p className="text-pink-400 font-medium animate-pulse">Crafting the perfect hooks and hashtags...</p>
                 </div>
               ) : captions ? (
-                <motion.div 
-                  initial={{ opacity: 0 }} 
-                  animate={{ opacity: 1 }}
-                  className="prose prose-invert prose-pink max-w-none
-                    prose-headings:text-white prose-headings:font-bold
-                    prose-p:text-zinc-300 prose-p:leading-relaxed
-                    prose-strong:text-pink-300"
-                >
-                  <ReactMarkdown>{captions}</ReactMarkdown>
-                </motion.div>
+                <div className="space-y-6">
+                  {captions.split('---SPLIT---').filter(b => b.trim().length > 0).map((block, index) => (
+                    <motion.div 
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }} 
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="bg-[#111827] border border-white/10 rounded-xl p-6 relative"
+                    >
+                      <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/5">
+                        <h4 className="text-lg font-bold text-white">Option {index + 1}</h4>
+                        <CopyOptionButton text={block.trim()} />
+                      </div>
+                      <div className="prose prose-invert prose-pink max-w-none
+                        prose-headings:text-white prose-headings:font-bold
+                        prose-p:text-zinc-300 prose-p:leading-relaxed
+                        prose-strong:text-pink-300"
+                      >
+                        <ReactMarkdown>{block.trim()}</ReactMarkdown>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               ) : (
                 <div className="h-full min-h-[400px] flex flex-col items-center justify-center text-zinc-500 border-2 border-dashed border-white/5 rounded-xl p-8 text-center bg-white/5">
                   <Type className="h-12 w-12 text-zinc-700 mb-4" />
