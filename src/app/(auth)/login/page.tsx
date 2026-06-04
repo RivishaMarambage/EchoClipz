@@ -217,16 +217,15 @@ export default function LoginPage(props: { searchParams: Promise<{ error?: strin
         </div>
 
         {/* Right Cover Image Column */}
-        <div className="hidden lg:block w-1/2 right h-full overflow-hidden border-l border-zinc-900 bg-zinc-950 relative">
-          <div className="absolute inset-0 bg-gradient-to-tr from-black via-transparent to-transparent z-10 pointer-events-none" />
+        <div className="hidden lg:flex w-1/2 right h-full items-center justify-center overflow-hidden border-l border-zinc-900 bg-[#0a0a0c] relative">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#39FF14]/10 via-transparent to-transparent z-10 pointer-events-none" />
           <Image
-            src="https://images.pexels.com/photos/7102037/pexels-photo-7102037.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
-            loader={({ src }) => src}
-            width={1000}
-            height={1000}
+            src="/EchoClipz%20final.png"
+            width={800}
+            height={800}
             priority
-            alt="EchoClipz Creator Hub"
-            className="w-full h-full object-cover opacity-20 filter grayscale hover:scale-105 transition-transform duration-700"
+            alt="EchoClipz Logo"
+            className="w-full h-full object-contain p-16 drop-shadow-[0_0_50px_rgba(57,255,20,0.2)] hover:scale-105 transition-transform duration-700"
           />
         </div>
 
