@@ -14,7 +14,7 @@ interface Clip {
   duration: string;
   label: string;
   score: number;
-  url?: string;
+  url: string;
 }
 
 export default function ClipsPage() {
@@ -150,7 +150,7 @@ export default function ClipsPage() {
         ]);
         
         const data = await ffmpeg.readFile(outName);
-        const outBlob = new Blob([data], { type: 'video/mp4' });
+        const outBlob = new Blob([data as unknown as BlobPart], { type: 'video/mp4' });
         const objectUrl = URL.createObjectURL(outBlob);
         
         // Format time mm:ss
@@ -252,7 +252,7 @@ export default function ClipsPage() {
                    <div>
                      <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">Current Stream</span>
                      <h3 className="text-sm font-semibold text-white font-mono">
-                       AI Analyzing: <span className="text-[#39FF14]">{fileName || youtubeUrl}</span>
+                       AI Analyzing: <span className="text-[#39FF14]">{fileName}</span>
                      </h3>
                    </div>
                    {phase === 'analyzing' && (

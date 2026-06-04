@@ -29,7 +29,7 @@ export function Footer() {
 
         {/* Huge Logo Section */}
         <div className="flex items-center mb-10 overflow-hidden">
-          <img src="/EchoClipz.png" alt="EchoClipz Logo" className="h-20 md:h-28 lg:h-36 object-contain drop-shadow-[0_0_30px_rgba(57,255,20,0.3)]" />
+          <img src="/EchoClipz%20final.png" alt="EchoClipz Logo" className="h-20 md:h-28 lg:h-36 object-contain drop-shadow-[0_0_30px_rgba(57,255,20,0.3)]" />
         </div>
 
         {/* Middle Section: Info & Newsletter */}

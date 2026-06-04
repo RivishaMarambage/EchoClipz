@@ -33,7 +33,9 @@ export function Navbar() {
     }
 
     if (isOpen) {
-      setHeaderShapeClass('rounded-2xl');
+      shapeTimeoutRef.current = setTimeout(() => {
+        setHeaderShapeClass('rounded-2xl');
+      }, 0);
     } else {
       shapeTimeoutRef.current = setTimeout(() => {
         setHeaderShapeClass('rounded-full');
@@ -48,9 +50,10 @@ export function Navbar() {
   }, [isOpen]);
 
   const logoElement = (
-    <a href="/" className="flex items-center group">
-      <img src="/EchoClipz.png" alt="EchoClipz" className="h-14 object-contain drop-shadow-[0_0_12px_rgba(57,255,20,0.3)] transition-transform duration-300 group-hover:scale-105" />
-    </a>
+    <Link href="/" className="flex items-center group">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/EchoClipz%20final.png" alt="EchoClipz" className="h-14 object-contain drop-shadow-[0_0_12px_rgba(57,255,20,0.3)] transition-transform duration-300 group-hover:scale-105" />
+    </Link>
   );
 
   const navLinksData = [

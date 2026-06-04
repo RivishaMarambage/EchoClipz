@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
 import { X, Type, Scissors, Loader2, Save, Trash2, Smartphone, Monitor, Play, ArrowLeft } from 'lucide-react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
@@ -18,7 +17,7 @@ const FONTS = [
 ];
 
 interface VideoEditorModalProps {
-  clip: any;
+  clip: { id: string; url: string; duration: string };
   ffmpeg: FFmpeg | null;
   onClose: () => void;
   onSave: (newUrl: string) => void;
@@ -142,6 +141,8 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
       return;
     }
     
+    const lastLogs: string[] = [];
+    
     try {
       setIsRendering(true);
       setError('');
@@ -175,70 +176,90 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
       }
       
       const args = ['-i', inputName];
-      let filterComplex = '';
       
-      // 1 & 2. Trim and Concat Segments
-      if (segments.length === 1) {
+      const isSimpleTrim = segments.length === 1 && !fontFilter && aspectRatio === 'original';
+      
+      if (isSimpleTrim) {
+        // Fast path: No complex filters needed, just stream copy
         const seg = segments[0];
-        filterComplex += `[0:v]trim=start=${seg.start}:end=${seg.end},setpts=PTS-STARTPTS[v_concat];`;
-        filterComplex += `[0:a]atrim=start=${seg.start}:end=${seg.end},asetpts=PTS-STARTPTS[a_out];`;
+        args.push('-ss', seg.start.toString(), '-to', seg.end.toString());
+        args.push('-c', 'copy');
+        args.push(outputName);
       } else {
-        segments.forEach((seg, i) => {
-          filterComplex += `[0:v]trim=start=${seg.start}:end=${seg.end},setpts=PTS-STARTPTS[v${i}];`;
-          filterComplex += `[0:a]atrim=start=${seg.start}:end=${seg.end},asetpts=PTS-STARTPTS[a${i}];`;
-        });
+        let filterComplex = '';
         
-        let concatInputs = '';
-        segments.forEach((_, i) => {
-          concatInputs += `[v${i}][a${i}]`;
-        });
-        filterComplex += `${concatInputs}concat=n=${segments.length}:v=1:a=1[v_concat][a_out];`;
+        // 1 & 2. Trim and Concat Segments
+        if (segments.length === 1) {
+          const seg = segments[0];
+          filterComplex += `[0:v]trim=start=${seg.start}:end=${seg.end},setpts=PTS-STARTPTS[v_concat];`;
+          // Note: If video has no audio, [0:a] will crash. But complex edits usually need audio mapping.
+          filterComplex += `[0:a]atrim=start=${seg.start}:end=${seg.end},asetpts=PTS-STARTPTS[a_out];`;
+        } else {
+          segments.forEach((seg, i) => {
+            filterComplex += `[0:v]trim=start=${seg.start}:end=${seg.end},setpts=PTS-STARTPTS[v${i}];`;
+            filterComplex += `[0:a]atrim=start=${seg.start}:end=${seg.end},asetpts=PTS-STARTPTS[a${i}];`;
+          });
+          
+          let concatInputs = '';
+          segments.forEach((_, i) => {
+            concatInputs += `[v${i}][a${i}]`;
+          });
+          filterComplex += `${concatInputs}concat=n=${segments.length}:v=1:a=1[v_concat][a_out];`;
+        }
+        
+        // 3. Chain Crop / Text on video
+        let currentV = '[v_concat]';
+        let nextV = '[v_crop]';
+        
+        if (aspectRatio === '9:16') {
+          filterComplex += `${currentV}crop=ih*9/16:ih${nextV};`;
+          currentV = nextV;
+          nextV = '[v_text]';
+        }
+        
+        if (fontFilter) {
+          filterComplex += `${currentV}${fontFilter}${nextV};`;
+          currentV = nextV;
+        }
+        
+        args.push('-filter_complex', filterComplex);
+        args.push('-map', currentV);
+        args.push('-map', '[a_out]');
+        
+        // We must re-encode video because of complex filters
+        args.push('-c:v', 'libx264', '-preset', 'ultrafast');
+        args.push('-c:a', 'aac');
+        args.push(outputName);
       }
       
-      // 3. Chain Crop / Text on video
-      let currentV = '[v_concat]';
-      let nextV = '[v_crop]';
-      
-      if (aspectRatio === '9:16') {
-        filterComplex += `${currentV}crop=ih*9/16:ih${nextV};`;
-        currentV = nextV;
-        nextV = '[v_text]';
-      }
-      
-      if (fontFilter) {
-        filterComplex += `${currentV}${fontFilter}${nextV};`;
-        currentV = nextV;
-      }
-      
-      // Final mapping
-      // If we didn't add crop or font, currentV is still [v_concat]
-      
-      args.push('-filter_complex', filterComplex);
-      args.push('-map', currentV);
-      args.push('-map', '[a_out]');
-      
-      // We must re-encode video because of complex filters
-      args.push('-c:v', 'libx264', '-preset', 'ultrafast');
-      args.push('-c:a', 'aac');
-      args.push(outputName);
+      const onLog = ({ message }: { message: string }) => {
+        console.log('FFmpeg:', message);
+        lastLogs.push(message);
+        if (lastLogs.length > 5) lastLogs.shift();
+      };
       
       const onProgress = ({ progress }: { progress: number }) => {
         setRenderProgress(Math.min(99, Math.round(progress * 100)));
       };
       
+      ffmpeg.on('log', onLog);
       ffmpeg.on('progress', onProgress);
+      
       await ffmpeg.exec(args);
+      
       ffmpeg.off('progress', onProgress);
+      ffmpeg.off('log', onLog);
       
       const data = await ffmpeg.readFile(outputName);
-      const outBlob = new Blob([data], { type: 'video/mp4' });
+      const outBlob = new Blob([data as unknown as BlobPart], { type: 'video/mp4' });
       const objectUrl = URL.createObjectURL(outBlob);
       
       onSave(objectUrl);
       
-    } catch (err: any) {
+    } catch (err: Error | unknown) {
       console.error("FFmpeg render error:", err);
-      setError(err.message || 'Failed to render video. Check browser console.');
+      // Append the last FFmpeg log lines to help debug!
+      setError(`Failed to render. Details: ${(err as Error).message}. FFmpeg Log: ${lastLogs.join(' | ')}`);
     } finally {
       setIsRendering(false);
     }
@@ -466,7 +487,7 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
 
           {/* Segments Track */}
           <div className="relative w-full h-16 bg-zinc-900/50 rounded-lg overflow-hidden border border-zinc-800 flex shadow-inner">
-             {segments.map((seg, i) => {
+             {segments.map((seg) => {
                const widthPct = ((seg.end - seg.start) / maxDuration) * 100;
                return (
                  <div 

@@ -96,7 +96,7 @@ export function AppSidebar() {
   const initials = fullName
     ? fullName
         .split(" ")
-        .map((n) => n[0])
+        .map((n: string) => n[0])
         .join("")
         .slice(0, 2)
         .toUpperCase()
@@ -111,7 +111,7 @@ export function AppSidebar() {
       <SidebarContent className="p-4">
         <SidebarGroup>
           <SidebarGroupLabel className="mb-6 mt-2 ml-2">
-            <img src="/EchoClipz.png" alt="EchoClipz" className="h-11 object-contain drop-shadow-[0_0_10px_rgba(57,255,20,0.2)]" />
+            <img src="/EchoClipz%20final.png" alt="EchoClipz" className="h-11 object-contain drop-shadow-[0_0_10px_rgba(57,255,20,0.2)]" />
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-2">

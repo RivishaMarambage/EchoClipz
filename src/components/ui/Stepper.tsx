@@ -183,11 +183,11 @@ interface SlideTransitionProps {
   onHeightReady: (height: number) => void
 }
 
+// SSR Safe Layout Effect
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
+
 function SlideTransition({ children, direction, onHeightReady }: SlideTransitionProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-
-  // SSR Safe Layout Effect
-  const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 
   useIsomorphicLayoutEffect(() => {
     if (containerRef.current) onHeightReady(containerRef.current.offsetHeight)

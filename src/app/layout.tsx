@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "EchoClipz – Turn Long Videos Into Viral Short Clips",
   description: "AI-powered creator operating system for TikTok, Reels, and YouTube Shorts editors.",
   icons: {
-    icon: "/EchoClipz.png",
+    icon: "/EchoClipz%20final.png",
   },
 };
 
