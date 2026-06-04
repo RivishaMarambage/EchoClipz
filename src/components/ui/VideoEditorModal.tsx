@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Type, Scissors, Loader2, Save, Trash2, Smartphone, Monitor, Play, ArrowLeft } from 'lucide-react';
+import { X, Type, Scissors, Loader2, Save, Trash2, Smartphone, Monitor, Play, Pause, ArrowLeft, Music, Volume2, Upload } from 'lucide-react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 
@@ -51,9 +51,25 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
   const [segments, setSegments] = useState<Segment[]>([{ id: '1', start: 0, end: maxDuration }]);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>('1');
   const [playhead, setPlayhead] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Audio State
+  const [musicTrack, setMusicTrack] = useState<{ file: File; url: string; name: string } | null>(null);
+  const [videoVolume, setVideoVolume] = useState(100);
+  const [musicVolume, setMusicVolume] = useState(50);
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Sync Volume
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.volume = videoVolume / 100;
+  }, [videoVolume]);
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = musicVolume / 100;
+  }, [musicVolume]);
 
   // Dragging logic
   const [isDragging, setIsDragging] = useState(false);
@@ -98,6 +114,18 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
     if (videoRef.current) {
       videoRef.current.currentTime = time;
     }
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+    }
+  };
+
+  const handlePlay = () => {
+    setIsPlaying(true);
+    audioRef.current?.play();
+  };
+  const handlePause = () => {
+    setIsPlaying(false);
+    audioRef.current?.pause();
   };
 
   const handleSplit = () => {
@@ -154,6 +182,12 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
       // Load the input video into the FFmpeg virtual file system
       await ffmpeg.writeFile(inputName, await fetchFile(clip.url));
       
+      let musicInputName = '';
+      if (musicTrack) {
+        musicInputName = `music_${Date.now()}.mp3`;
+        await ffmpeg.writeFile(musicInputName, await fetchFile(musicTrack.file));
+      }
+      
       let fontFilter = '';
       if (textOverlay.trim() !== '') {
         try {
@@ -176,8 +210,11 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
       }
       
       const args = ['-i', inputName];
+      if (musicInputName) {
+        args.push('-i', musicInputName);
+      }
       
-      const isSimpleTrim = segments.length === 1 && !fontFilter && aspectRatio === 'original';
+      const isSimpleTrim = segments.length === 1 && !fontFilter && aspectRatio === 'original' && !musicTrack && videoVolume === 100;
       
       if (isSimpleTrim) {
         // Fast path: No complex filters needed, just stream copy
@@ -207,7 +244,20 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
           filterComplex += `${concatInputs}concat=n=${segments.length}:v=1:a=1[v_concat][a_out];`;
         }
         
-        // 3. Chain Crop / Text on video
+        // 3. Audio Mixing Stage
+        let finalAudio = '[a_out]';
+        
+        if (musicTrack) {
+          filterComplex += `[a_out]volume=${videoVolume / 100}[v_aud];`;
+          filterComplex += `[1:a]volume=${musicVolume / 100}[m_aud];`;
+          filterComplex += `[v_aud][m_aud]amix=inputs=2:duration=first:dropout_transition=2[a_final];`;
+          finalAudio = '[a_final]';
+        } else if (videoVolume !== 100) {
+          filterComplex += `[a_out]volume=${videoVolume / 100}[a_final];`;
+          finalAudio = '[a_final]';
+        }
+
+        // 4. Chain Crop / Text on video
         let currentV = '[v_concat]';
         let nextV = '[v_crop]';
         
@@ -222,9 +272,14 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
           currentV = nextV;
         }
         
+        // Remove trailing semicolon to prevent FFmpeg 'No such filter' error
+        if (filterComplex.endsWith(';')) {
+          filterComplex = filterComplex.slice(0, -1);
+        }
+        
         args.push('-filter_complex', filterComplex);
         args.push('-map', currentV);
-        args.push('-map', '[a_out]');
+        args.push('-map', finalAudio);
         
         // We must re-encode video because of complex filters
         args.push('-c:v', 'libx264', '-preset', 'ultrafast');
@@ -312,16 +367,20 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
         <div className="flex-1 flex flex-col items-center justify-center p-8 bg-black relative">
           <div 
             ref={containerRef}
-            className={`relative bg-zinc-900 border border-zinc-800 overflow-hidden shadow-2xl flex items-center justify-center transition-all duration-300 ${aspectRatio === '9:16' ? 'aspect-[9/16] h-[90%]' : 'aspect-video w-[80%]'}`}
+            className={`relative bg-zinc-900 overflow-hidden shadow-2xl flex items-center justify-center transition-all duration-300 ${aspectRatio === '9:16' ? 'aspect-[9/16] h-full rounded-lg' : 'aspect-video w-[80%] border border-zinc-800'}`}
           >
             <video 
               ref={videoRef}
               src={clip.url} 
               onTimeUpdate={handleTimeUpdate}
+              onPlay={handlePlay}
+              onPause={handlePause}
               controls={false}
               className={`w-full h-full object-cover ${aspectRatio === '9:16' ? 'object-center' : ''}`}
-              style={aspectRatio === '9:16' ? { clipPath: 'inset(0 calc(50% - (100% * 9/16 / 2)) 0 calc(50% - (100% * 9/16 / 2)))' } : {}}
             />
+            {musicTrack && (
+              <audio ref={audioRef} src={musicTrack.url} />
+            )}
             
             {/* Draggable Text Overlay */}
             {textOverlay && (
@@ -343,13 +402,13 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
               </div>
             )}
             
-            {/* Play overlay if paused */}
+            {/* Play/Pause Button */}
             <div className="absolute bottom-4 left-4 flex gap-2 z-10">
                <button 
-                 onClick={() => videoRef.current?.paused ? videoRef.current.play() : videoRef.current?.pause()}
-                 className="bg-black/50 hover:bg-black/80 backdrop-blur-md text-white p-2 rounded-full border border-white/10"
+                 onClick={() => isPlaying ? videoRef.current?.pause() : videoRef.current?.play()}
+                 className="bg-black/50 hover:bg-black/80 backdrop-blur-md text-white p-2 rounded-full border border-white/10 transition-transform active:scale-95"
                >
-                 <Play className="w-4 h-4 fill-current" />
+                 {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current translate-x-[1px]" />}
                </button>
             </div>
           </div>
@@ -432,6 +491,73 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
                 </div>
               )}
             </div>
+
+            {/* Audio Settings Section */}
+            <div className="space-y-4 pt-4 border-t border-zinc-800/50">
+              <h4 className="text-xs font-mono text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+                <Music className="w-4 h-4" />
+                Audio & Music
+              </h4>
+              
+              <div className="space-y-3 p-4 bg-zinc-900/50 rounded-lg border border-zinc-800/50">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] text-zinc-500 font-mono">Video Volume ({videoVolume}%)</label>
+                  <Volume2 className="w-3.5 h-3.5 text-zinc-500" />
+                </div>
+                <input 
+                  type="range" min="0" max="100" 
+                  value={videoVolume} onChange={(e) => setVideoVolume(parseInt(e.target.value))}
+                  className="w-full accent-[#39FF14]"
+                />
+
+                <div className="pt-2 border-t border-zinc-800/50">
+                  <label className="text-[10px] text-zinc-500 font-mono mb-2 block">Background Music</label>
+                  {!musicTrack ? (
+                    <label className="flex items-center justify-center gap-2 w-full bg-zinc-900 border border-zinc-700 hover:border-[#39FF14] transition-colors rounded-lg px-4 py-2 text-xs font-mono text-white cursor-pointer">
+                      <Upload className="w-3.5 h-3.5" />
+                      Upload Audio
+                      <input 
+                        type="file" 
+                        accept="audio/*" 
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const url = URL.createObjectURL(file);
+                            setMusicTrack({ file, url, name: file.name });
+                          }
+                        }}
+                      />
+                    </label>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between bg-zinc-900 border border-zinc-700 rounded p-2">
+                        <span className="text-xs text-[#39FF14] font-mono truncate mr-2">{musicTrack.name}</span>
+                        <button 
+                          onClick={() => {
+                            if (musicTrack.url) URL.revokeObjectURL(musicTrack.url);
+                            setMusicTrack(null);
+                          }}
+                          className="text-zinc-500 hover:text-red-400"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] text-zinc-500 font-mono">Music Volume ({musicVolume}%)</label>
+                        <Volume2 className="w-3.5 h-3.5 text-[#39FF14]" />
+                      </div>
+                      <input 
+                        type="range" min="0" max="100" 
+                        value={musicVolume} onChange={(e) => setMusicVolume(parseInt(e.target.value))}
+                        className="w-full accent-[#39FF14]"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
             
           </div>
         </div>
