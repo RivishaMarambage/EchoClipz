@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Type, Scissors, Loader2, Save, Trash2, Smartphone, Monitor, Play, Pause, ArrowLeft, Music, Volume2, Upload } from 'lucide-react';
+import { X, Type, Scissors, Loader2, Save, Trash2, Smartphone, Monitor, Play, Pause, ArrowLeft, Music, Volume2, Upload, Undo, Redo } from 'lucide-react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 
@@ -60,6 +60,42 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>('1');
   const [playhead, setPlayhead] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  const [history, setHistory] = useState<{segments: Segment[], audioSegments: Segment[]}[]>([{
+    segments: [{ id: '1', start: 0, end: parsedMax }],
+    audioSegments: []
+  }]);
+  const [historyIndex, setHistoryIndex] = useState<number>(0);
+
+  const pushHistory = (newSegments: Segment[], newAudioSegments: Segment[]) => {
+    const nextState = { segments: newSegments, audioSegments: newAudioSegments };
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(nextState);
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const prevIndex = historyIndex - 1;
+      setHistoryIndex(prevIndex);
+      setSegments(history[prevIndex].segments);
+      setAudioSegments(history[prevIndex].audioSegments);
+      setSelectedSegmentId(null);
+      setSelectedAudioSegmentId(null);
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const nextIndex = historyIndex + 1;
+      setHistoryIndex(nextIndex);
+      setSegments(history[nextIndex].segments);
+      setAudioSegments(history[nextIndex].audioSegments);
+      setSelectedSegmentId(null);
+      setSelectedAudioSegmentId(null);
+    }
+  };
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -232,6 +268,7 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
         setSegments(newSegments);
         setSelectedSegmentId(seg2.id);
         setSelectedAudioSegmentId(null);
+        pushHistory(newSegments, audioSegments);
       }
     } else {
       const renderedTime = getRenderedTime(playhead, segments);
@@ -250,6 +287,7 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
         setAudioSegments(newSegments);
         setSelectedAudioSegmentId(seg2.id);
         setSelectedSegmentId(null);
+        pushHistory(segments, newSegments);
       }
     }
   };
@@ -260,11 +298,15 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
         alert("You cannot delete the only remaining video segment.");
         return;
       }
-      setSegments(segments.filter(s => s.id !== selectedSegmentId));
+      const newSegments = segments.filter(s => s.id !== selectedSegmentId);
+      setSegments(newSegments);
       setSelectedSegmentId(null);
+      pushHistory(newSegments, audioSegments);
     } else if (selectedAudioSegmentId) {
-      setAudioSegments(audioSegments.filter(s => s.id !== selectedAudioSegmentId));
+      const newSegments = audioSegments.filter(s => s.id !== selectedAudioSegmentId);
+      setAudioSegments(newSegments);
       setSelectedAudioSegmentId(null);
+      pushHistory(segments, newSegments);
     }
   };
 
@@ -513,7 +555,9 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
                   const duration = e.currentTarget.duration;
                   setMusicDuration(duration);
                   if (audioSegments.length === 0) {
-                    setAudioSegments([{ id: `audio_${Date.now()}`, start: 0, end: duration }]);
+                    const newAudioSegs = [{ id: `audio_${Date.now()}`, start: 0, end: duration }];
+                    setAudioSegments(newAudioSegs);
+                    pushHistory(segments, newAudioSegs);
                   }
                 }}
               />
@@ -677,6 +721,7 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
                             setAudioSegments([]);
                             setMusicDuration(0);
                             setSelectedAudioSegmentId(null);
+                            pushHistory(segments, []);
                           }}
                           className="text-zinc-500 hover:text-red-400"
                         >
@@ -707,6 +752,25 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
       <div className="h-48 bg-zinc-950 border-t border-zinc-800 flex flex-col shrink-0">
         {/* Timeline Tools */}
         <div className="h-10 bg-zinc-900 border-b border-zinc-800 flex items-center px-4 gap-2">
+          <div className="flex items-center gap-1 border-r border-zinc-800 pr-2 mr-1">
+             <button 
+               onClick={handleUndo} 
+               disabled={historyIndex <= 0}
+               className="p-1.5 text-zinc-400 hover:text-white disabled:opacity-30 disabled:hover:text-zinc-400 rounded transition-colors"
+               title="Undo"
+             >
+               <Undo className="w-4 h-4" />
+             </button>
+             <button 
+               onClick={handleRedo} 
+               disabled={historyIndex >= history.length - 1}
+               className="p-1.5 text-zinc-400 hover:text-white disabled:opacity-30 disabled:hover:text-zinc-400 rounded transition-colors"
+               title="Redo"
+             >
+               <Redo className="w-4 h-4" />
+             </button>
+          </div>
+
           <button 
             onClick={() => handleSplit('video')}
             disabled={!segments.some(s => playhead > s.start + 0.2 && playhead < s.end - 0.2)}
