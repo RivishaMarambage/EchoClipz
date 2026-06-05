@@ -30,8 +30,6 @@ interface Segment {
 }
 
 export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorModalProps) {
-  const maxDuration = parseInt(clip.duration.replace('s', ''), 10) || 30;
-  
   // App State
   const [isRendering, setIsRendering] = useState(false);
   const [renderProgress, setRenderProgress] = useState(0);
@@ -47,16 +45,21 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
   // Aspect Ratio State
   const [aspectRatio, setAspectRatio] = useState<'original' | '9:16'>('original');
 
-  // Timeline State
-  const [segments, setSegments] = useState<Segment[]>([{ id: '1', start: 0, end: maxDuration }]);
-  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>('1');
-  const [playhead, setPlayhead] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-
   // Audio State
   const [musicTrack, setMusicTrack] = useState<{ file: File; url: string; name: string } | null>(null);
   const [videoVolume, setVideoVolume] = useState(100);
   const [musicVolume, setMusicVolume] = useState(50);
+  const [audioSegments, setAudioSegments] = useState<Segment[]>([]);
+  const [selectedAudioSegmentId, setSelectedAudioSegmentId] = useState<string | null>(null);
+  const [musicDuration, setMusicDuration] = useState<number>(0);
+
+  // Timeline State
+  const parsedMax = parseInt(clip.duration.replace('s', ''), 10) || 30;
+  const maxDuration = Math.max(parsedMax, Math.ceil(musicDuration));
+  const [segments, setSegments] = useState<Segment[]>([{ id: '1', start: 0, end: parsedMax }]);
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>('1');
+  const [playhead, setPlayhead] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -100,11 +103,39 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
     };
   }, [isDragging]);
 
+  const getRenderedTime = (absoluteTime: number, segs: Segment[]) => {
+    let renderedTime = 0;
+    const sorted = [...segs].sort((a, b) => a.start - b.start);
+    for (const seg of sorted) {
+      if (absoluteTime < seg.start) break;
+      if (absoluteTime > seg.end) {
+        renderedTime += (seg.end - seg.start);
+      } else {
+        renderedTime += (absoluteTime - seg.start);
+        break;
+      }
+    }
+    return renderedTime;
+  };
+
+  const getAbsoluteTimeFromRendered = (renderedTime: number, segs: Segment[]) => {
+    let accumulated = 0;
+    const sorted = [...segs].sort((a, b) => a.start - b.start);
+    for (const seg of sorted) {
+      const duration = seg.end - seg.start;
+      if (renderedTime <= accumulated + duration) {
+        return seg.start + (renderedTime - accumulated);
+      }
+      accumulated += duration;
+    }
+    if (sorted.length > 0) return sorted[sorted.length - 1].end;
+    return 0;
+  };
+
   const handleTimeUpdate = () => {
     if (videoRef.current) {
       let currentTime = videoRef.current.currentTime;
       
-      // Skip logic: if we are in a deleted area, jump to the next segment
       if (segments.length > 0) {
         const activeSegment = segments.find(s => currentTime >= s.start && currentTime <= s.end);
         
@@ -115,30 +146,42 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
           if (nextSegment) {
             videoRef.current.currentTime = nextSegment.start;
             currentTime = nextSegment.start;
-            if (audioRef.current) audioRef.current.currentTime = nextSegment.start;
           } else {
-            // Passed the last segment, so stop
             videoRef.current.pause();
             setIsPlaying(false);
             const endOfLast = sortedSegments[sortedSegments.length - 1].end;
             videoRef.current.currentTime = endOfLast;
             currentTime = endOfLast;
-            if (audioRef.current) {
-              audioRef.current.pause();
-              audioRef.current.currentTime = endOfLast;
-            }
           }
         }
       }
       
       setPlayhead(currentTime);
+
+      if (audioRef.current && musicTrack && audioSegments.length > 0) {
+        const renderedTime = getRenderedTime(currentTime, segments);
+        const audioAbsTime = getAbsoluteTimeFromRendered(renderedTime, audioSegments);
+        const totalAudioDuration = audioSegments.reduce((acc, s) => acc + (s.end - s.start), 0);
+        
+        if (renderedTime >= totalAudioDuration) {
+           audioRef.current.pause();
+        } else {
+           if (Math.abs(audioRef.current.currentTime - audioAbsTime) > 0.2) {
+             audioRef.current.currentTime = audioAbsTime;
+           }
+           if (isPlaying && audioRef.current.paused) {
+             audioRef.current.play().catch(() => {});
+           }
+        }
+      } else if (audioRef.current && musicTrack && audioSegments.length === 0) {
+        audioRef.current.pause();
+      }
     }
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     let time = parseFloat(e.target.value);
     
-    // Snap out of deleted areas during seeking
     if (segments.length > 0) {
       const activeSegment = segments.find(s => time >= s.start && time <= s.end);
       if (!activeSegment) {
@@ -156,48 +199,73 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
     if (videoRef.current) {
       videoRef.current.currentTime = time;
     }
-    if (audioRef.current) {
-      audioRef.current.currentTime = time;
+    if (audioRef.current && musicTrack && audioSegments.length > 0) {
+      const renderedTime = getRenderedTime(time, segments);
+      const audioAbsTime = getAbsoluteTimeFromRendered(renderedTime, audioSegments);
+      audioRef.current.currentTime = audioAbsTime;
     }
   };
 
   const handlePlay = () => {
     setIsPlaying(true);
-    audioRef.current?.play();
+    if (musicTrack && audioSegments.length > 0) {
+      audioRef.current?.play().catch(() => {});
+    }
   };
   const handlePause = () => {
     setIsPlaying(false);
     audioRef.current?.pause();
   };
 
-  const handleSplit = () => {
-    // Automatically find the segment that the playhead is currently inside
-    const segmentIndex = segments.findIndex(s => playhead >= s.start && playhead <= s.end);
-    if (segmentIndex === -1) return;
-    
-    const seg = segments[segmentIndex];
-    
-    // Only split if playhead is strictly inside the segment with at least 0.2s buffer
-    if (playhead > seg.start + 0.2 && playhead < seg.end - 0.2) {
-      const seg1: Segment = { id: `${Date.now()}_1`, start: seg.start, end: playhead };
-      const seg2: Segment = { id: `${Date.now()}_2`, start: playhead, end: seg.end };
+  const handleSplit = (type: 'video' | 'audio' = 'video') => {
+    if (type === 'video') {
+      const segmentIndex = segments.findIndex(s => playhead >= s.start && playhead <= s.end);
+      if (segmentIndex === -1) return;
       
-      const newSegments = [...segments];
-      newSegments.splice(segmentIndex, 1, seg1, seg2);
-      setSegments(newSegments);
-      setSelectedSegmentId(seg2.id); // select second half automatically
+      const seg = segments[segmentIndex];
+      if (playhead > seg.start + 0.2 && playhead < seg.end - 0.2) {
+        const seg1: Segment = { id: `v_${Date.now()}_1`, start: seg.start, end: playhead };
+        const seg2: Segment = { id: `v_${Date.now()}_2`, start: playhead, end: seg.end };
+        
+        const newSegments = [...segments];
+        newSegments.splice(segmentIndex, 1, seg1, seg2);
+        setSegments(newSegments);
+        setSelectedSegmentId(seg2.id);
+        setSelectedAudioSegmentId(null);
+      }
+    } else {
+      const renderedTime = getRenderedTime(playhead, segments);
+      const audioAbsTime = getAbsoluteTimeFromRendered(renderedTime, audioSegments);
+      
+      const segmentIndex = audioSegments.findIndex(s => audioAbsTime >= s.start && audioAbsTime <= s.end);
+      if (segmentIndex === -1) return;
+      
+      const seg = audioSegments[segmentIndex];
+      if (audioAbsTime > seg.start + 0.2 && audioAbsTime < seg.end - 0.2) {
+        const seg1: Segment = { id: `a_${Date.now()}_1`, start: seg.start, end: audioAbsTime };
+        const seg2: Segment = { id: `a_${Date.now()}_2`, start: audioAbsTime, end: seg.end };
+        
+        const newSegments = [...audioSegments];
+        newSegments.splice(segmentIndex, 1, seg1, seg2);
+        setAudioSegments(newSegments);
+        setSelectedAudioSegmentId(seg2.id);
+        setSelectedSegmentId(null);
+      }
     }
   };
 
   const handleDeleteSegment = () => {
-    if (!selectedSegmentId) return;
-    if (segments.length <= 1) {
-      alert("You cannot delete the only remaining segment.");
-      return;
+    if (selectedSegmentId) {
+      if (segments.length <= 1) {
+        alert("You cannot delete the only remaining video segment.");
+        return;
+      }
+      setSegments(segments.filter(s => s.id !== selectedSegmentId));
+      setSelectedSegmentId(null);
+    } else if (selectedAudioSegmentId) {
+      setAudioSegments(audioSegments.filter(s => s.id !== selectedAudioSegmentId));
+      setSelectedAudioSegmentId(null);
     }
-    const newSegments = segments.filter(s => s.id !== selectedSegmentId);
-    setSegments(newSegments);
-    setSelectedSegmentId(null);
   };
 
   const handleRender = async () => {
@@ -289,13 +357,30 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
         // 3. Audio Mixing Stage
         let finalAudio = '[a_out]';
         
-        if (musicTrack) {
+        if (musicTrack && audioSegments.length > 0) {
+          let mAud = '[1:a]';
+          if (audioSegments.length === 1) {
+             const seg = audioSegments[0];
+             filterComplex += `[1:a]atrim=start=${seg.start}:end=${seg.end},asetpts=PTS-STARTPTS[m_trimmed];`;
+             mAud = '[m_trimmed]';
+          } else {
+             audioSegments.forEach((seg, i) => {
+               filterComplex += `[1:a]atrim=start=${seg.start}:end=${seg.end},asetpts=PTS-STARTPTS[ma${i}];`;
+             });
+             let aConcatInputs = '';
+             audioSegments.forEach((_, i) => {
+               aConcatInputs += `[ma${i}]`;
+             });
+             filterComplex += `${aConcatInputs}concat=n=${audioSegments.length}:v=0:a=1[m_trimmed];`;
+             mAud = '[m_trimmed]';
+          }
+          filterComplex += `${mAud}volume=${musicVolume / 100}[m_aud_vol];`;
           filterComplex += `[a_out]volume=${videoVolume / 100}[v_aud];`;
-          filterComplex += `[1:a]volume=${musicVolume / 100}[m_aud];`;
-          filterComplex += `[v_aud][m_aud]amix=inputs=2:duration=first:dropout_transition=2[a_final];`;
+          filterComplex += `[v_aud][m_aud_vol]amix=inputs=2:duration=first:dropout_transition=2[a_final];`;
           finalAudio = '[a_final]';
-        } else if (videoVolume !== 100) {
-          filterComplex += `[a_out]volume=${videoVolume / 100}[a_final];`;
+        } else if (videoVolume !== 100 || (musicTrack && audioSegments.length === 0)) {
+          // If no music segments, just use video audio (or muted video audio)
+          filterComplex += `[a_out]volume=${(musicTrack && audioSegments.length === 0) ? videoVolume / 100 : videoVolume / 100}[a_final];`;
           finalAudio = '[a_final]';
         }
 
@@ -421,7 +506,17 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
               className={`w-full h-full object-cover ${aspectRatio === '9:16' ? 'object-center' : ''}`}
             />
             {musicTrack && (
-              <audio ref={audioRef} src={musicTrack.url} />
+              <audio 
+                ref={audioRef} 
+                src={musicTrack.url} 
+                onLoadedMetadata={(e) => {
+                  const duration = e.currentTarget.duration;
+                  setMusicDuration(duration);
+                  if (audioSegments.length === 0) {
+                    setAudioSegments([{ id: `audio_${Date.now()}`, start: 0, end: duration }]);
+                  }
+                }}
+              />
             )}
             
             {/* Draggable Text Overlay */}
@@ -579,6 +674,9 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
                           onClick={() => {
                             if (musicTrack.url) URL.revokeObjectURL(musicTrack.url);
                             setMusicTrack(null);
+                            setAudioSegments([]);
+                            setMusicDuration(0);
+                            setSelectedAudioSegmentId(null);
                           }}
                           className="text-zinc-500 hover:text-red-400"
                         >
@@ -610,18 +708,33 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
         {/* Timeline Tools */}
         <div className="h-10 bg-zinc-900 border-b border-zinc-800 flex items-center px-4 gap-2">
           <button 
-            onClick={handleSplit}
+            onClick={() => handleSplit('video')}
             disabled={!segments.some(s => playhead > s.start + 0.2 && playhead < s.end - 0.2)}
             className="flex items-center gap-1.5 px-3 py-1 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:hover:bg-zinc-800 rounded text-xs font-mono text-white transition-colors"
           >
-            <Scissors className="w-3.5 h-3.5" /> Split at Playhead
+            <Scissors className="w-3.5 h-3.5" /> Split Video
           </button>
+          
+          {musicTrack && (
+            <button 
+              onClick={() => handleSplit('audio')}
+              disabled={!audioSegments.some(s => {
+                  const renderedTime = getRenderedTime(playhead, segments);
+                  const audioAbsTime = getAbsoluteTimeFromRendered(renderedTime, audioSegments);
+                  return audioAbsTime > s.start + 0.2 && audioAbsTime < s.end - 0.2;
+              })}
+              className="flex items-center gap-1.5 px-3 py-1 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:hover:bg-zinc-800 rounded text-xs font-mono text-[#39FF14] hover:text-[#2ee610] transition-colors"
+            >
+              <Scissors className="w-3.5 h-3.5" /> Split Audio
+            </button>
+          )}
+
           <button 
             onClick={handleDeleteSegment}
-            disabled={!selectedSegmentId || segments.length <= 1}
-            className="flex items-center gap-1.5 px-3 py-1 bg-zinc-800 hover:bg-red-900/50 disabled:opacity-50 disabled:hover:bg-zinc-800 rounded text-xs font-mono text-red-400 hover:text-red-300 transition-colors"
+            disabled={(!selectedSegmentId && !selectedAudioSegmentId) || (selectedSegmentId && segments.length <= 1)}
+            className="flex items-center gap-1.5 px-3 py-1 bg-zinc-800 hover:bg-red-900/50 disabled:opacity-50 disabled:hover:bg-zinc-800 rounded text-xs font-mono text-red-400 hover:text-red-300 transition-colors ml-auto"
           >
-            <Trash2 className="w-3.5 h-3.5" /> Delete Segment
+            <Trash2 className="w-3.5 h-3.5" /> Delete Selected
           </button>
         </div>
         
@@ -653,26 +766,66 @@ export function VideoEditorModal({ clip, ffmpeg, onClose, onSave }: VideoEditorM
             </div>
           </div>
 
-          {/* Segments Track */}
-          <div className="relative w-full h-16 bg-zinc-900/50 rounded-lg overflow-hidden border border-zinc-800 flex shadow-inner">
+          {/* Segments Track (Video) */}
+          <div className="relative w-full h-12 bg-zinc-900/50 rounded-lg overflow-hidden border border-zinc-800 shadow-inner">
              {segments.map((seg) => {
+               const leftPct = (seg.start / maxDuration) * 100;
                const widthPct = ((seg.end - seg.start) / maxDuration) * 100;
                return (
                  <div 
                    key={seg.id}
-                   onClick={() => setSelectedSegmentId(seg.id)}
-                   className={`h-full border-r border-zinc-950 flex items-center justify-center px-2 cursor-pointer transition-all relative z-10 ${
+                   onClick={() => {
+                     setSelectedSegmentId(seg.id);
+                     setSelectedAudioSegmentId(null);
+                   }}
+                   className={`absolute top-0 bottom-0 border-r border-zinc-950 flex items-center justify-center px-2 cursor-pointer transition-all z-10 ${
                      selectedSegmentId === seg.id ? 'bg-[#39FF14]/20 border border-[#39FF14] z-20 shadow-[0_0_15px_rgba(57,255,20,0.2)]' : 'bg-zinc-800 hover:bg-zinc-700'
                    }`}
-                   style={{ width: `${widthPct}%` }}
+                   style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
                  >
                    <span className="text-[10px] font-mono text-white/70 truncate pointer-events-none drop-shadow-md">
-                     {seg.start.toFixed(1)}s - {seg.end.toFixed(1)}s
+                     Video {seg.start.toFixed(1)}s - {seg.end.toFixed(1)}s
                    </span>
                  </div>
                );
              })}
           </div>
+
+          {/* Audio Segments Track */}
+          {musicTrack && audioSegments.length > 0 && (
+            <div className="relative w-full h-12 bg-zinc-900/50 rounded-lg overflow-hidden border border-zinc-800 shadow-inner mt-2">
+               {audioSegments.map((seg) => {
+                 const startRendered = getRenderedTime(seg.start, audioSegments);
+                 const durationRendered = seg.end - seg.start;
+                 const endRendered = startRendered + durationRendered;
+                 
+                 const startVisual = getAbsoluteTimeFromRendered(startRendered, segments);
+                 const endVisual = getAbsoluteTimeFromRendered(endRendered, segments);
+                 
+                 const leftPct = (startVisual / maxDuration) * 100;
+                 const widthPct = ((endVisual - startVisual) / maxDuration) * 100;
+                 
+                 return (
+                   <div 
+                     key={seg.id}
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       setSelectedAudioSegmentId(seg.id);
+                       setSelectedSegmentId(null);
+                     }}
+                     className={`absolute top-0 bottom-0 border-r border-zinc-950 flex items-center justify-center px-2 cursor-pointer transition-all z-10 ${
+                       selectedAudioSegmentId === seg.id ? 'bg-blue-500/30 border border-blue-500 z-20 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-blue-900/40 hover:bg-blue-800/50'
+                     }`}
+                     style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+                   >
+                     <span className="text-[10px] font-mono text-white/90 truncate pointer-events-none drop-shadow-md">
+                       Audio {seg.start.toFixed(1)}s - {seg.end.toFixed(1)}s
+                     </span>
+                   </div>
+                 );
+               })}
+            </div>
+          )}
         </div>
       </div>
     </div>
