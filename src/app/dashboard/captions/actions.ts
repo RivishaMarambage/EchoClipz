@@ -13,19 +13,19 @@ export async function generateCaptions(formData: FormData) {
   }
 
   const prompt = `You are an expert social media copywriter.
-Create 3 different highly engaging captions for a ${platform} video about: "${topic}".
+Create 6 different highly engaging, short, and concise captions for a ${platform} video about: "${topic}".
 The tone should be: ${tone}.
 
 For each caption include:
 1. A strong hook in the first sentence.
-2. A very short, punchy main body (maximum 2-3 short sentences).
+2. A very short, punchy main body (maximum 1-2 very short sentences).
 3. A clear Call to Action (CTA).
-4. A curated list of 5-8 highly relevant hashtags for ${platform}.
+4. A curated list of 3-5 highly relevant hashtags for ${platform}.
 
 IMPORTANT FORMATTING RULES: 
-- You MUST separate each of the 3 options with this exact delimiter on a new line: ---SPLIT---
+- You MUST separate each of the 6 options with this exact delimiter on a new line: ---SPLIT---
 - You MUST put at least two blank lines between the Call to Action and the hashtags so they are clearly separated.
-- Do not include "Option 1" titles, I will add those myself. Just output the text for the 3 options separated by ---SPLIT---. 
+- Do not include "Option 1" titles, I will add those myself. Just output the text for the 6 options separated by ---SPLIT---. 
 - Do not include introductory conversational text.`;
 
   try {
